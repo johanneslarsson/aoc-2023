@@ -41,7 +41,7 @@ func getPartTwo(cards []Card) int {
 			localCount = cardMap[card.Id]
 		} else {
 			for _, your := range card.Yours {
-				if slices.Contains(card.Winning, your) { // time consuming to check slices
+				if slices.Contains(card.Winning, your) {
 					localCount++
 				}
 			}
