@@ -3,9 +3,7 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"math"
 	"os"
-	"sort"
 	"strconv"
 	"strings"
 )
@@ -27,53 +25,41 @@ type MapType struct {
 	RangeLength           int
 }
 
-func getDestinationNumber(maps *[]MapType, source int) int {
-	//fmt.Printf("%+v\n", maps)
-	for _, mapSourceDest := range *maps {
-		if source >= mapSourceDest.SourceRangeStart && source < mapSourceDest.SourceRangeStart+mapSourceDest.RangeLength {
-			val := mapSourceDest.DestinationRangeStart + source - mapSourceDest.SourceRangeStart
-			return val
-		}
-	}
-	return source
-}
-
-func getSourceNumber(maps []MapType, destination int) (result []int) {
-	//fmt.Printf("%+v\n", maps)
+func getSourceNumber(maps []MapType, destination int) int {
 	for _, mapSourceDest := range maps {
 		if destination >= mapSourceDest.DestinationRangeStart && destination < mapSourceDest.DestinationRangeStart+mapSourceDest.RangeLength {
 			val := mapSourceDest.SourceRangeStart + destination - mapSourceDest.DestinationRangeStart
-			result = append(result, val)
+			return val
 		}
 	}
-	if len(result) == 0 {
-		result = append(result, destination)
-	}
-	return result
+	return destination
 }
 
 func getPartOne(food Food) int {
-	var result []int
+	seedsMap := make(map[int]struct{}, len(food.Seeds))
 	for _, seed := range food.Seeds {
-		fmt.Println("Seed:", seed)
-		soil := getDestinationNumber(&food.SeedSoilMap, seed)
-		fmt.Println("Soil:", soil)
-		fertilizer := getDestinationNumber(&food.SoilFertilizerMap, soil)
-		fmt.Println("Fertilizer:", fertilizer)
-		water := getDestinationNumber(&food.FertilizerWaterMap, fertilizer)
-		fmt.Println("Water:", water)
-		light := getDestinationNumber(&food.WaterLightMap, water)
-		fmt.Println("Light:", light)
-		temperature := getDestinationNumber(&food.LightTemperature, light)
-		fmt.Println("Temperature:", temperature)
-		humidity := getDestinationNumber(&food.TemperatureHumidity, temperature)
-		fmt.Println("Humidity:", humidity)
-		location := getDestinationNumber(&food.HumidityLocation, humidity)
-		fmt.Println("Location:", location)
-		result = append(result, location)
+		seedsMap[seed] = struct{}{}
 	}
-	sort.Ints(result)
-	return result[0]
+	for i := 1; true; i++ {
+		//fmt.Println("Location:", i)
+		humidity := getSourceNumber(food.HumidityLocation, i)
+		//fmt.Println("Humidity:", humidity)
+		temperature := getSourceNumber(food.TemperatureHumidity, humidity)
+		//fmt.Println("Temperature:", temperature)
+		light := getSourceNumber(food.LightTemperature, temperature)
+		//fmt.Println("Light:", light)
+		water := getSourceNumber(food.WaterLightMap, light)
+		//fmt.Println("Water:", water)
+		fertilizer := getSourceNumber(food.FertilizerWaterMap, water)
+		//fmt.Println("Fertilizer:", fertilizer)
+		soil := getSourceNumber(food.SoilFertilizerMap, fertilizer)
+		//fmt.Println("Soil:", soil)
+		seed := getSourceNumber(food.SeedSoilMap, soil)
+		if _, exists := seedsMap[seed]; exists {
+			return i
+		}
+	}
+	return 0
 }
 
 func getPartTwo(food Food) int {
@@ -85,44 +71,35 @@ func getPartTwo(food Food) int {
 		}
 	}
 	fmt.Println("Size:", total)
-
 	seeds := make([]int, total)
-
 	fmt.Println("Generating seeds")
 	for i := 0; i < len(food.Seeds); i = i + 2 {
 		for j := 0; j < food.Seeds[i+1]; j++ {
 			seeds[food.Seeds[i]+j] = 1
 		}
 	}
-	fmt.Println("Calculating locations...")
-
-	minVal := math.MaxInt
-	for seed, _ := range seeds {
-		if seeds[seed] == 0 {
-			continue
-		}
-		//fmt.Println("Seed:", seed)
-		soil := getDestinationNumber(&food.SeedSoilMap, seed)
-		//fmt.Println("Soil:", soil)
-		fertilizer := getDestinationNumber(&food.SoilFertilizerMap, soil)
-		//fmt.Println("Fertilizer:", fertilizer)
-		water := getDestinationNumber(&food.FertilizerWaterMap, fertilizer)
-		//fmt.Println("Water:", water)
-		light := getDestinationNumber(&food.WaterLightMap, water)
-		//fmt.Println("Light:", light)
-		temperature := getDestinationNumber(&food.LightTemperature, light)
-		//fmt.Println("Temperature:", temperature)
-		humidity := getDestinationNumber(&food.TemperatureHumidity, temperature)
+	fmt.Println("Calculating location")
+	for i := 1; true; i++ {
+		//fmt.Println("Location:", i)
+		humidity := getSourceNumber(food.HumidityLocation, i)
 		//fmt.Println("Humidity:", humidity)
-		location := getDestinationNumber(&food.HumidityLocation, humidity)
-		//fmt.Println("Location:", location)
-		//result = append(result, location[0])
-		if location < minVal {
-			minVal = location
+		temperature := getSourceNumber(food.TemperatureHumidity, humidity)
+		//fmt.Println("Temperature:", temperature)
+		light := getSourceNumber(food.LightTemperature, temperature)
+		//fmt.Println("Light:", light)
+		water := getSourceNumber(food.WaterLightMap, light)
+		//fmt.Println("Water:", water)
+		fertilizer := getSourceNumber(food.FertilizerWaterMap, water)
+		//fmt.Println("Fertilizer:", fertilizer)
+		soil := getSourceNumber(food.SoilFertilizerMap, fertilizer)
+		//fmt.Println("Soil:", soil)
+		seed := getSourceNumber(food.SeedSoilMap, soil)
+		//fmt.Println("Seed:", seed)
+		if seed < len(seeds) && seeds[seed] == 1 {
+			return i
 		}
 	}
-	//sort.Ints(result)
-	return minVal
+	return 0
 }
 
 func getMapOrder(food *Food, index int) *[]MapType {
