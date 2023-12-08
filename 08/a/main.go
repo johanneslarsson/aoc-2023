@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"fmt"
 	"os"
-	"strconv"
 	"strings"
 )
 
@@ -115,19 +114,6 @@ func getRows(filename string) Network {
 	fmt.Printf("%+v\n", network)
 	return network
 }
-
-func getStringValue(val string) int {
-	var result string
-	for _, v := range val {
-		result += fmt.Sprintf("%v", v)
-	}
-	res, err := strconv.Atoi(result)
-	if err != nil {
-		panic(err)
-	}
-	return res
-}
-
 func main() {
 	fmt.Println("Part one:", getPartOne(getRows("../input.txt")))
 	fmt.Println("Part two:", getPartTwo(getRows("../input.txt")))
